@@ -72,6 +72,7 @@ namespace testMobilePark.Controllers
                     break;
             }
 
+            //סמבטנאול ט ג בה
             foreach (var item in response)
             {
                 _dbContext.News.Add(new News()
