@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NewsAPI;
 using NewsAPI.Constants;
 using NewsAPI.Models;
+using testMobilePark.Data;
 
 namespace testMobilePark.Controllers
 {
@@ -13,13 +14,13 @@ namespace testMobilePark.Controllers
 
         private readonly IConfiguration _configuration;
         public readonly NewsDb _dbContext;
+        private const string engVovels = "aeiou";
+        private const string rusVovels = "аеЄиоуыэю€";
 
         public SearchNewsController(NewsDb dbContext, IConfiguration configuration)
         {
             _dbContext = dbContext;
             _configuration = configuration;
-
-
         }
         [HttpGet(Name = "SearchNews")]
         public async Task<ActionResult<List<NewsItem>>> SearchNews(string keyword, Fragment fragment, Lang language)
@@ -46,8 +47,8 @@ namespace testMobilePark.Controllers
                                     Fragment = article.Title,
                                     VowelCount = CountVowels(article.Title ?? "", language)
                                 })
-                                     .OrderByDescending(item => item.VowelCount)
-                                     .ToList();
+                                .OrderByDescending(item => item.VowelCount)
+                                .ToList();
                     break;
                 case Fragment.Description:
                     response = (from article in articles.Articles
@@ -71,31 +72,29 @@ namespace testMobilePark.Controllers
                     break;
             }
 
+            foreach (var item in response)
+            {
+                _dbContext.News.Add(new News()
+                {
+                    Keyword = keyword,
+                    Fragment = item.Fragment,
+                    Language = language.ToString(),
+                    RequestTime = DateTime.Now,
+                    FragmentType = fragment.ToString(),
+                    VowelCount = item.VowelCount
+                });
+            }
 
-            // 3. (ќпционально) «апись лога в базу данных
-            _dbContext.News.Add(new News() { FragmentType = response.First().Fragment,Language = language.ToString() });
             _dbContext.SaveChanges();
-            //await LogRequest(keyword, fragment, language, newsItems);
 
             return Ok(response);
         }
 
-        public enum Fragment
-        {
-            Title, Description, Content
-        }
-        public enum Lang
-        {
-            eng, rus
-        }
-
         private int CountVowels(string text, Lang language)
         {
-            var vowels = language == 0 ? "aeiou" : "аеЄиоуыэю€";
-            return text.ToLower().Count(x => vowels.Contains(x));
+            var vowels = language == Lang.eng ? engVovels : rusVovels;
+
+            return text.ToLower().Count(vowels.Contains);
         }
-
-
-
     }
 }

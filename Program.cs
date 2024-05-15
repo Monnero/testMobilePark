@@ -1,9 +1,7 @@
 using HotelWebApi;
 using Microsoft.EntityFrameworkCore;
-using testMobilePark.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddScoped<INewsRepository, NewsRepository>();
 
 builder.Services.AddDbContext<NewsDb>(options =>
 {

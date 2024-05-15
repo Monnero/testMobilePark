@@ -4,7 +4,6 @@
     {
         public string Fragment { get; set; }
         public int VowelCount { get; set; }
-
     }
     
 }
